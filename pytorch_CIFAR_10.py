@@ -62,7 +62,7 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 # print(''.join('%-11s' % classes[labels[i]] for i in range(4)))
 # show(tv.utils.make_grid(datas))
 net = Net_test()
-net.to(device)
+# net.to(device)
 criterion = nn.CrossEntropyLoss()  # 交叉熵代价函数
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 for epoch in range(2):
