@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import optim
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class Net_test(nn.Module):
@@ -21,7 +21,7 @@ class Net_test(nn.Module):
 
     def forward(self, x):
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
-        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        x = F.max_pool2d(F.relu(self.conv2(x)), (2, 2))
         x = x.view(x.size()[0], -1)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -62,15 +62,14 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 # print(''.join('%-11s' % classes[labels[i]] for i in range(4)))
 # show(tv.utils.make_grid(datas))
 net = Net_test()
-# net.to(device)
+net.to(device)
 criterion = nn.CrossEntropyLoss()  # 交叉熵代价函数
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 for epoch in range(2):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data
-        inputs.to(device)
-        labels.to(device)
+        inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         """前向传播+反向传播"""
         outputs = net(inputs)
@@ -98,8 +97,7 @@ correct = 0
 total = 0
 for data in testloader:
     images, labels = data
-    images.to(device)
-    labels.to(device)
+    images, labels = images.to(device), labels.to(device)  # 转移到GPU运算，但是注意不要写成images.to(device)
     outputs = net(images)
     predicted = torch.argmax(outputs, dim=1)
     total += len(labels)
