@@ -92,9 +92,24 @@ print('Finished Training')
 # outputs = net(images)
 # predicted = torch.argmax(outputs, dim=1)
 # print('预测的label: ', ''.join('%-8s' % classes[temp] for temp in predicted))
+"""测试钩子"""
+
+
+def forward_hook(self, input, output):
+    print('input1: ', input[0].size(), type(input[0]))
+    print('output1: ', output.size(), type(output))
+
+
+def backward_hook(self, input, output):
+    print('input2: ', input[0].size(), type(input))
+    print('output2: ', output.size(), type(output))
+
+
 """整个测试数据集的预测水平"""
 correct = 0
 total = 0
+net.conv1.register_forward_hook(forward_hook)
+net.conv2.register_backward_hook(backward_hook)
 for data in testloader:
     images, labels = data
     images, labels = images.to(device), labels.to(device)  # 转移到GPU运算，但是注意不要写成images.to(device)
