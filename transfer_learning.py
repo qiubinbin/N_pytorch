@@ -38,10 +38,10 @@ class_image = data_set['train'].classes
 """测试图片显示"""
 
 
-for m, n in iter(data_loader['train']):
-    inputs = tv.utils.make_grid(m)
-    classes = [class_image[i] for i in n]
-    show_image(inputs, classes)
+# for m, n in iter(data_loader['train']):
+#     inputs = tv.utils.make_grid(m)
+#     classes = [class_image[i] for i in n]
+#     show_image(inputs, classes)
 
 
 def train_model(model, optimizer, lr_optimizer, criterion, epochs):
@@ -104,10 +104,27 @@ def visualizing(model, image_nums=6):
                 return
 
 
+"""微调卷积网络，重置最后的全连接层"""
+# model = tv.models.resnet18(pretrained=True)  # 载入预训练模型
+# in_features = model.fc.in_features
+# model.fc = torch.nn.Linear(in_features, 2)  # 重置最后的全连接层
+# criterion = torch.nn.CrossEntropyLoss()  # 交叉熵代价函数
+# optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)  # 随机梯度下降
+# lr_optimizer = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2)  # 伽马衰减学习效率优化
+# new_model = train_model(model, optimizer, lr_optimizer, criterion, 20)  # 获得最佳模型
+# visualizing(new_model)
+# plt.ioff()
+# plt.show()
+"""固定特征提取器"""
 model = tv.models.resnet18(pretrained=True)  # 载入预训练模型
+for param in model.parameters():  # 冻结卷积层
+    param.requires_grad_(False)
+in_features = model.fc.in_features
+model.fc = torch.nn.Linear(in_features, 2)  # 重置最后的全连接层
 criterion = torch.nn.CrossEntropyLoss()  # 交叉熵代价函数
-optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)  # 随机梯度下降
+optimizer = torch.optim.SGD(model.fc.parameters(), lr=0.1, momentum=0.9)  # 随机梯度下降,注意和上面的区别
 lr_optimizer = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2)  # 伽马衰减学习效率优化
-new_model = train_model(model, optimizer, lr_optimizer, criterion, 10)  # 获得最佳模型
+new_model = train_model(model, optimizer, lr_optimizer, criterion, 20)  # 获得最佳模型
 visualizing(new_model)
 plt.ioff()
+plt.show()
