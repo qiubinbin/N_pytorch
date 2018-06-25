@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import numpy as np
 from skimage import io, transform
 import matplotlib.pyplot as plt
@@ -35,20 +35,23 @@ class FaceMark(Dataset):
         return sample
 
 
-test = FaceMark('faces/face_landmarks.csv', 'faces')
-print(len(test))
-fig = plt.figure()
-for i in range(len(test)):
-    sample = test[i]
-    print(i, sample['image'].shape, sample['landmarks'].shape)
-    ax = plt.subplot(1, 4, i + 1)
-    plt.tight_layout()  # 紧凑显示图片，居中显示
-    ax.set_title('Sample #%s' % i)
-    # ax.axis('off')
-    show_landmarks(**sample)  # 字典拆分,字典的键与函数形参一样
-    if i == 3:
-        plt.show()
-        break
+"""测试图片显示"""
+
+
+# test = FaceMark('faces/face_landmarks.csv', 'faces')
+# print(len(test))
+# fig = plt.figure()
+# for i in range(len(test)):
+#     sample = test[i]
+#     print(i, sample['image'].shape, sample['landmarks'].shape)
+#     ax = plt.subplot(1, 4, i + 1)
+#     plt.tight_layout()  # 紧凑显示图片，居中显示
+#     ax.set_title('Sample #%s' % i)
+#     # ax.axis('off')
+#     show_landmarks(**sample)  # 字典拆分,字典的键与函数形参一样
+#     if i == 3:
+#         plt.show()
+#         break
 
 
 class Rescale():
@@ -107,15 +110,40 @@ class ToTensor():
         return {'image': image, 'landmarks': landmark}
 
 
-scale = Rescale(256)  # 最短边限定到256
-crop = RandomCrop(128)  # 裁剪出128*128
-composed = transforms.Compose([Rescale(256), RandomCrop(224)])
-fig = plt.figure()
-sample = test[65]
-for i, trfrm in enumerate([scale, crop, composed]):
-    transformed_sample = trfrm(sample)
-    ax = plt.subplot(1, 3, i + 1)
-    plt.tight_layout()
-    ax.set_title(type(trfrm).__name__)
-    show_landmarks(**transformed_sample)
-plt.show()
+"""测试图片变换显示"""
+
+
+# scale = Rescale(256)  # 最短边限定到256
+# crop = RandomCrop(128)  # 裁剪出128*128
+# composed = transforms.Compose([Rescale(256), RandomCrop(224)])
+# fig = plt.figure()
+# sample = test[65]
+# for i, trfrm in enumerate([scale, crop, composed]):
+#     transformed_sample = trfrm(sample)
+#     ax = plt.subplot(1, 3, i + 1)
+#     plt.tight_layout()
+#     ax.set_title(type(trfrm).__name__)
+#     show_landmarks(**transformed_sample)
+# plt.show()
+def show_landmarks_batch(batch):
+    image = batch['image']
+    landmarks = batch['landmarks']
+    compose = utils.make_grid(image)
+    plt.imshow(compose.numpy().transpose(1, 2, 0))
+    plt.title('Faces_batches')
+    plt.axis('off')
+    x_delta = image.size(3)
+    for i in range(len(image)):
+        plt.scatter(landmarks[i][:, 0] + x_delta * i, landmarks[i][:, 1], marker='.')  # 横排显示，所以横坐标会有偏移
+
+
+dataset = FaceMark('faces/face_landmarks.csv', 'faces',
+                   transform=transforms.Compose([Rescale(256), RandomCrop(224), ToTensor()]))
+dataloader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=0)  # 注意此处num_workers必须为0，BUG
+for i, batch in enumerate(dataloader):
+    print(i, batch['image'].size(), batch['landmarks'].size())
+    plt.figure()
+    show_landmarks_batch(batch)
+    if i == 2:
+        plt.show()
+        break
